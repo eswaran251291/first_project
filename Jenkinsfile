@@ -25,15 +25,15 @@ pipeline {
                 script {
                     // Create virtual environment if it doesn't exist
                     if (!fileExists("${env.VENV_DIR}")) {
-                        bat 'python -m venv venv'
+                        bat 'py -m venv venv'
                         echo "Created virtual environment"
                     }
                     
                     // Activate virtual environment and install dependencies
                     bat '''
                         call venv\\Scripts\\activate.bat
-                        python --version
-                        pip install --upgrade pip
+                        py --version
+                        py -m pip install --upgrade pip
                     '''
                     echo "Python environment setup completed"
                 }
@@ -45,7 +45,7 @@ pipeline {
                 bat '''
                     call venv\\Scripts\\activate.bat
                     echo "Building Python application..."
-                    python hello_world.py
+                    py hello_world.py
                 '''
                 echo "Build completed successfully"
             }
@@ -56,7 +56,7 @@ pipeline {
                 bat '''
                     call venv\\Scripts\\activate.bat
                     echo "Running tests..."
-                    python -c "import hello_world; print('Test passed: Module imported successfully')"
+                    py -c "import hello_world; print('Test passed: Module imported successfully')"
                 '''
                 echo "Tests completed successfully"
             }

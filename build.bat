@@ -20,7 +20,7 @@ echo [STAGE 1] Setting up Python environment...
 REM Create virtual environment if it doesn't exist
 if not exist "%VENV_DIR%" (
     echo Creating virtual environment...
-    python -m venv venv
+    py -m venv venv
     if %ERRORLEVEL% neq 0 (
         echo ERROR: Failed to create virtual environment
         exit /b 1
@@ -35,12 +35,12 @@ if %ERRORLEVEL% neq 0 (
 )
 
 echo Python version:
-python --version
+py --version
 
 echo.
 echo [STAGE 2] Building the application...
 REM Run the Python application
-python hello_world.py
+py hello_world.py
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Application build failed
     exit /b 1
@@ -49,7 +49,7 @@ if %ERRORLEVEL% neq 0 (
 echo.
 echo [STAGE 3] Running tests...
 REM Simple test to verify the module can be imported
-python -c "import hello_world; print('Test passed: Module imported successfully')"
+py -c "import hello_world; print('Test passed: Module imported successfully')"
 if %ERRORLEVEL% neq 0 (
     echo ERROR: Tests failed
     exit /b 1
