@@ -40,35 +40,80 @@ pipeline {
             }
         }
         
-        stage('Build') {
+        stage('Build Hello World') {
             steps {
                 bat '''
                     call venv\\Scripts\\activate.bat
-                    echo "Building Python application..."
+                    echo "Building Hello World application..."
                     py hello_world.py
                 '''
-                echo "Build completed successfully"
+                echo "Hello World build completed successfully"
             }
         }
         
-        stage('Test') {
+        stage('Build Hello Wipro') {
             steps {
                 bat '''
                     call venv\\Scripts\\activate.bat
-                    echo "Running tests..."
-                    py -c "import hello_world; print('Test passed: Module imported successfully')"
+                    echo "Building Hello Wipro application..."
+                    py hello_wipro.py
                 '''
-                echo "Tests completed successfully"
+                echo "Hello Wipro build completed successfully"
             }
         }
         
-        stage('Package') {
+        stage('Build Hello Jenkins') {
             steps {
                 bat '''
-                    echo "Creating build artifact..."
+                    call venv\\Scripts\\activate.bat
+                    echo "Building Hello Jenkins application..."
+                    py hello_jenkins.py
+                '''
+                echo "Hello Jenkins build completed successfully"
+            }
+        }
+        
+        stage('Test All Applications') {
+            parallel {
+                stage('Test Hello World') {
+                    steps {
+                        bat '''
+                            call venv\\Scripts\\activate.bat
+                            echo "Testing Hello World..."
+                            py -c "import hello_world; print('Test passed: Hello World module imported successfully')"
+                        '''
+                    }
+                }
+                stage('Test Hello Wipro') {
+                    steps {
+                        bat '''
+                            call venv\\Scripts\\activate.bat
+                            echo "Testing Hello Wipro..."
+                            py -c "import hello_wipro; print('Test passed: Hello Wipro module imported successfully')"
+                        '''
+                    }
+                }
+                stage('Test Hello Jenkins') {
+                    steps {
+                        bat '''
+                            call venv\\Scripts\\activate.bat
+                            echo "Testing Hello Jenkins..."
+                            py -c "import hello_jenkins; print('Test passed: Hello Jenkins module imported successfully')"
+                        '''
+                    }
+                }
+            }
+        }
+        
+        stage('Package All Applications') {
+            steps {
+                bat '''
+                    echo "Creating build artifacts for all applications..."
                     mkdir dist
                     copy hello_world.py dist\\
-                    echo "Build artifact created in dist/ directory"
+                    copy hello_wipro.py dist\\
+                    copy hello_jenkins.py dist\\
+                    echo "All build artifacts created in dist/ directory"
                 '''
             }
         }
@@ -83,6 +128,20 @@ pipeline {
         success {
             echo "✅ Build SUCCESSFUL - All stages completed successfully"
             
+            // Archive build artifacts
+            archiveArtifacts artifacts: 'dist/*', fingerprint: true
+            
+            // Publish HTML report for build pipeline viewer
+            publishHTML ( 
+                target : [ 
+                    allowMissing : false, 
+                    alwaysLinkToLastBuild : true, 
+                    keepAll : true, 
+                    reportDir : 'dist', 
+                    reportFiles : 'hello_*.py', 
+                    reportName : 'Build Pipeline Report'
+                ])
+            
             // Send success notification (example with email)
             emailext (
                 subject: "✅ SUCCESS: Jenkins Build ${env.BUILD_NUMBER} - ${env.JOB_NAME}",
@@ -95,9 +154,15 @@ pipeline {
                 - Duration: ${currentBuild.durationString}
                 - Timestamp: ${new Date().format('yyyy-MM-dd HH:mm:ss')}
                 
+                Applications Built:
+                - Hello World: ✅ SUCCESS
+                - Hello Wipro: ✅ SUCCESS  
+                - Hello Jenkins: ✅ SUCCESS
+                
                 Repository: https://github.com/eswaran251291/first_project.git
                 
                 View build details: ${env.BUILD_URL}
+                View pipeline report: ${env.BUILD_URL}pipeline/
                 """,
                 to: 'eswaran91@gmail.com'
             )
@@ -105,6 +170,9 @@ pipeline {
         
         failure {
             echo "❌ Build FAILED - One or more stages failed"
+            
+            // Archive any artifacts that were created before failure
+            archiveArtifacts artifacts: 'dist/*', fingerprint: true, allowEmptyArchive: true
             
             // Send failure notification
             emailext (
@@ -121,6 +189,7 @@ pipeline {
                 Repository: https://github.com/eswaran251291/first_project.git
                 
                 View build details: ${env.BUILD_URL}
+                View pipeline logs: ${env.BUILD_URL}console
                 
                 Please check the build logs for more details.
                 """,
